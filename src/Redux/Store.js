@@ -4,14 +4,22 @@ import ApolloClient,  { createNetworkInterface } from "apollo-client";
 import thunk from 'redux-thunk';
 import logger from 'redux-logger';
 import AsyncStorage from '@react-native-community/async-storage';
+import { SubscriptionClient, addGraphQLSubscriptions } from 'subscriptions-transport-ws';
 
 import reducers from './Reducers';
 import constants from '../Utils/constants';
 
 //TODO: implement redux-persist
 
+// Create regular NetworkInterface by using apollo-client's API:
 const networkInterface = createNetworkInterface({
   uri: 'http://localhost:3000/graphql',
+});
+
+// Create WebSocket client
+const wsClient = new SubscriptionClient('ws://localhost:3000/subscriptions', {
+  reconnect: true,
+  connectionParams: {}
 });
 
 // Headers configuration
@@ -32,10 +40,16 @@ networkInterface.use([{
 
     return next();
   }
-}])
+}]);
+
+// Extend the network interface with the WebSocket
+const networkInterfaceWithSubscriptions = addGraphQLSubscriptions(
+  networkInterface,
+  wsClient
+);
 
 export const client = new ApolloClient({
-  networkInterface
+  networkInterface: networkInterfaceWithSubscriptions
 });
 
 const middlewares = [];
