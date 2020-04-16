@@ -2,7 +2,7 @@ import { gql } from 'react-apollo';
 
 export default gql`
 {
-    getTweets {
+  getTweets {
     _id
     text
     likesCount

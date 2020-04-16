@@ -1,9 +1,9 @@
 import React from 'react';
-import { TouchableOpacity, View, Image, StyleSheet, ActivityIndicator, Platform, ActionSheetIOS } from 'react-native';
+import { TouchableOpacity, View, Image, StyleSheet, ActivityIndicator, Platform, ActionSheetIOS, Alert } from 'react-native';
 import { withApollo } from 'react-apollo';
 import { connect, useSelector } from 'react-redux'
 
-import { Scale, Colors } from '../CommonConfig';
+import { Scale, Colors, Images } from '../CommonConfig';
 import { getLogout } from '../Redux/Actions';
 
 const AVATAR_SIZE = 30;
@@ -18,13 +18,22 @@ const HeaderAvatar = (props) => {
                 options: ['Cancel', 'Logout'],
                 destructiveButtonIndex: 1,
                 cancelButtonIndex: 0,
-            }, async buttonIndex => {
+            }, buttonIndex => {
                 if (buttonIndex == 1) {
-                    await props.client.resetStore();
-                    props.getLogout();
+                    _logout();
                 }
             })
+        } else if (Platform.OS == 'android') {
+            Alert.alert(`${props.auth.info.username}`, `${props.auth.info.email}`, [
+                {text: 'Cencel', onPress: () => {}, style: 'cancel'},
+                {text: 'Logout', onPress: _logout, style: 'default'}
+            ], { cancelable: false });
         }
+    }
+
+    const _logout = async () => {
+        await props.client.resetStore();
+        props.getLogout();
     }
 
     if (!props.auth.info) {
@@ -37,7 +46,7 @@ const HeaderAvatar = (props) => {
 
     return (
         <TouchableOpacity style={styles.button} onPress={_onPressProfile} disabled={props.disabled}>
-            <Image style={styles.avatar} source={{uri: props.auth.info.profile}}/>
+            <Image style={styles.avatar} source={props.auth.info.profile ? {uri: props.auth.info.profile} : Images.PLACEHOLDER}/>
         </TouchableOpacity>
     )
 }

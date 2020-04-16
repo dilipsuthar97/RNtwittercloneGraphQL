@@ -35,7 +35,7 @@ class NewTweet extends React.Component {
                  * This is the main thing for imidiate UI response using optimistic UI response
                  * When user create new tweet It'll display a newly created tweet's data before server response
                  * in tweet's feed screen
-                 * It's is different from Subscription
+                 * It's different from Subscription
                  */
                 optimisticResponse: {
                     __typename: 'Mutation',
@@ -58,7 +58,7 @@ class NewTweet extends React.Component {
                 update: (store, { data: { createTweet } }) => {     // Here we'r updating our Apollo client store data!
                     const data = store.readQuery({ query: GET_TWEETS_QUERY });
                     if (!data.getTweets.find(tweet => tweet._id == createTweet._id)) {
-                        store.writeQuery({ query: GET_TWEETS_QUERY, data: { ...data, getTweets: [{ ...createTweet }, ...data.getTweets] }})
+                        store.writeQuery({ query: GET_TWEETS_QUERY, data: { ...data, getTweets: [{ ...createTweet }, ...data.getTweets] }});
                     }
                 }
             });

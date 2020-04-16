@@ -47,6 +47,7 @@ class AppNavigation extends React.Component {
             <SafeAreaProvider>
                 <NavigationContainer>
                     <Stack.Navigator
+                        mode='modal'
                         initialRouteName='Home'
                         headerMode='float'
                         screenOptions={this._screenOptions}

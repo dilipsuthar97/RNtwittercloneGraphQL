@@ -11,12 +11,65 @@ import { ItemFeed } from '../../Components';
 import { GET_TWEETS_QUERY, ME_QUERY } from '../../Graphql/Quries';
 import { Colors, Images } from '../../CommonConfig';
 import { getSaveUserInfo } from '../../Redux/Actions';
+import { TWEET_ADDED_SUBSCRIPTION } from '../../Graphql/Subscriptions';
 
 class Home extends React.Component {
     // --------------- STATE ---------------
     state = {}
 
+    // UNSAFE_componentWillMount() {
+    //     // Calling subscription API here ...
+    //     this.props.data.subscribeToMore({
+    //         document: TWEET_ADDED_SUBSCRIPTION,
+    //         updateQuery: (prev, { subscriptionData }) => {
+    //             console.log('subscriptionData: ', subscriptionData);
+    //             if (!subscriptionData.data) {
+    //                 return prev;
+    //             }
+
+    //             const newTweet = subscriptionData.data.tweetAdded;
+
+    //             if (!prev.getTweets.find(tweet => tweet._id === newTweet._id)) {
+    //                 // return Object.assign({}, prev, {
+    //                 //     getTweets: [{ ...newTweet }, ...prev.getTweets]
+    //                 // })
+    //                 return {
+    //                     ...prev,
+    //                     getTweets: [{ ...newTweet }, ...prev.getTweets]
+    //                 };
+    //             }
+
+    //             return prev;
+    //         }
+    //     });
+    // }
+
     componentDidMount() {
+        // Calling subscription API here ...
+        this.props.data.subscribeToMore({
+            document: TWEET_ADDED_SUBSCRIPTION,
+            updateQuery: (prev, { subscriptionData }) => {
+                console.log('subscriptionData: ', subscriptionData);
+                if (!subscriptionData.data) {
+                    return prev;
+                }
+
+                const newTweet = subscriptionData.data.tweetAdded;
+
+                if (!prev.getTweets.find(tweet => tweet._id === newTweet._id)) {
+                    // return Object.assign({}, prev, {
+                    //     getTweets: [{ ...newTweet }, ...prev.getTweets]
+                    // })
+                    return {
+                        ...prev,
+                        getTweets: [{ ...newTweet }, ...prev.getTweets]
+                    };
+                }
+
+                return prev;
+            }
+        });
+
         this._getUserInfo();
     }
 
@@ -33,7 +86,7 @@ class Home extends React.Component {
     render() {
         console.log('props => ', this.props);
 
-        const { data } = this.props;
+        const { data } = this.props;    // data from GET_TWEETS_QUERY call...
 
         if (data.loading) {
             return (
@@ -46,6 +99,7 @@ class Home extends React.Component {
         return (
             <SafeAreaView style={home.safeArea}>
                 <FlatList
+                    showsVerticalScrollIndicator={false}
                     data={data.getTweets}
                     keyExtractor={(item) => item._id}
                     renderItem={this._renderItem}
