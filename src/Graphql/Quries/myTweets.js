@@ -3,10 +3,10 @@ import { gql } from 'react-apollo';
 import { ItemFeed } from '../../Components';
 
 export default gql`
-    subscription {
-        tweetAdded {
-            ...ItemFeed
-        }
+  {
+    myTweets {
+      ...ItemFeed
     }
-    ${ItemFeed.fragments.tweet}
+  }
+  ${ItemFeed.fragments.tweet}
 `;

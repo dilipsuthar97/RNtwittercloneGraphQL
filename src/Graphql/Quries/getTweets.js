@@ -1,19 +1,12 @@
 import { gql } from 'react-apollo';
 
+import { ItemFeed } from '../../Components';
+
 export default gql`
-{
-  getTweets {
-    _id
-    text
-    likesCount
-    createdAt
-    user {
-      username
-      email
-      firstName
-      lastName
-      profile
+  {
+    getTweets {
+      ...ItemFeed
     }
   }
-}
+  ${ItemFeed.fragments.tweet}
 `;

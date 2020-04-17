@@ -26,6 +26,8 @@ const TabBar = ({ state, descriptors, navigation }) => {
                 const spring = (val) => {
                     global.springValue1.setValue(0.8)
                     global.springValue2.setValue(0.8)
+                    global.springValue3.setValue(0.8)
+                    global.springValue4.setValue(0.8)
                     if (val == 0) {
                         Animated.spring(
                             global.springValue1,

@@ -6,4 +6,6 @@ export * from './Common/ButtonIcon'
 export * from './Common/Input'
 export * from './Common/Loader'
 
-export * from './Item/ItemFeed'
+import ItemFeed from './Item/ItemFeed'
+
+export { ItemFeed };

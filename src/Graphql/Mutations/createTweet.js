@@ -1,19 +1,12 @@
 import { gql } from 'react-apollo';
 
+import { ItemFeed } from '../../Components';
+
 export default gql`
     mutation createTweet($text: String!) {
         createTweet(text: $text) {
-            _id
-            text
-            likesCount
-            createdAt
-            user {
-                username
-                email
-                firstName
-                lastName
-                profile
-            }
+            ...ItemFeed
         }
     }
+    ${ItemFeed.fragments.tweet}
 `

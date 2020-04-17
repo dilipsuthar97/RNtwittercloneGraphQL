@@ -1,14 +1,45 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, Animated } from "react-native";
 import { formatDistanceToNow } from 'date-fns';
+import { graphql, gql } from 'react-apollo';
+import { Placeholder, PlaceholderMedia, PlaceholderLine, Shine } from 'rn-placeholder';
 
 import { FeedCard } from '../Common/FeedCard';
 import { AppStyle, Scale, Colors, Images } from "../../CommonConfig";
 import constants from '../../Utils/constants';
+import { FAVORITE_TWEET_MUTATION } from '../../Graphql/Mutations';
 
-const isFavorite = false;
+global.springLikeButon = new Animated.Value(1.0)
 
-const ItemFeed = ({ text, createdAt, likesCount, user }) => {
+const ItemFeed = ({ text, createdAt, likesCount, isFavorited, user, placeholder, isLoaded, ...props }) => {
+    console.log('props => ', props)
+
+    const spring = () => {
+        global.springLikeButon.setValue(0.7);
+        Animated.spring(global.springLikeButon, {
+            toValue: 1.0,
+            friction: 1
+        }).start();
+    }
+
+    if (placeholder && !isLoaded) {
+        return (
+            <FeedCard>
+                <Placeholder
+                    Animation={Shine}
+                    Left={PlaceholderMedia}
+                >
+                    <PlaceholderLine width='60%'/>
+                    <PlaceholderLine width='40%'/>
+                </Placeholder>
+                <Placeholder Animation={Shine}>
+                    <PlaceholderLine width='90%'/>
+                    <PlaceholderLine width='60%'/>
+                </Placeholder>
+            </FeedCard>
+        )
+    }
+
     return (
         <FeedCard>
             <FeedHeader>
@@ -29,14 +60,17 @@ const ItemFeed = ({ text, createdAt, likesCount, user }) => {
             <Bottom>
                 <TouchableOpacity style={styles.button}>
                     <Image source={Images.IC_BUBBLE} style={styles.buttonIcon}/>
-                    <Text style={styles.buttonText}>{likesCount}</Text>
+                    <Text style={styles.buttonText}>0</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.button}>
                     <Image source={Images.IC_RETWEET} style={styles.buttonIcon}/>
-                    <Text style={styles.buttonText}>{likesCount}</Text>
+                    <Text style={styles.buttonText}>0</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.button}>
-                    <Image source={Images.IC_HEART} style={[styles.buttonIcon, { tintColor: isFavorite ? Colors.RED : Colors.LIGHT_GRAY }]}/>
+                <TouchableOpacity style={styles.button} onPress={() => {
+                    spring();
+                    props.favorite();
+                }}>
+                    <Animated.Image source={Images.IC_HEART} style={[styles.buttonIcon, { tintColor: isFavorited ? Colors.RED : Colors.LIGHT_GRAY }, isFavorited && global.springLikeButon ? { transform: [{ scale: global.springLikeButon }] } : {}]}/>
                     <Text style={styles.buttonText}>{likesCount}</Text>
                 </TouchableOpacity>
             </Bottom>
@@ -66,6 +100,26 @@ const Bottom = ({ children }) => {
             {children}
         </View>
     )
+}
+
+// Using fragments for same query parameters again and again ...
+ItemFeed.fragments = {
+    tweet: gql`
+        fragment ItemFeed on Tweet {
+            _id
+            text
+            likesCount
+            isFavorited
+            createdAt
+            user {
+                username
+                email
+                firstName
+                lastName
+                profile
+            }
+        }
+    `
 }
 
 const AVATAR_SIZE = 40;
@@ -147,6 +201,31 @@ const styles = StyleSheet.create({
         width: Scale(20),
         tintColor: Colors.LIGHT_GRAY
     },  
-})
+});
 
-export { ItemFeed };
+const mapGraphQLStateToProps = {
+    props: ({ ownProps, mutate }) => ({
+        favorite: () => mutate({
+            variables: {
+                _id: ownProps._id
+            },
+            /**
+            * This is the main thing for imidiate UI response using optimistic UI response
+            * When user like/favorite the tweet It will update the liked/favorited tweet's data before server response
+            * in tweet's feed screen UI
+            * It's different from Subscription
+            */
+            optimisticResponse: {
+                __typename: 'Mutation',
+                favoriteTweet: {
+                    __typename: 'Tweet',
+                    _id: ownProps._id,
+                    likesCount: ownProps.isFavorited ? ownProps.likesCount - 1 : ownProps.likesCount + 1,
+                    isFavorited: !ownProps.isFavorited
+                }
+            }
+        })
+    })
+}
+
+export default graphql(FAVORITE_TWEET_MUTATION, mapGraphQLStateToProps)(ItemFeed);

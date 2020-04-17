@@ -14,11 +14,11 @@ import constants from '../Utils/constants';
 // Create regular NetworkInterface by using apollo-client's API:
 // FIXME: Replace both graphwl and ws url with actual URL
 const networkInterface = createNetworkInterface({
-  uri: 'http://c67194cc.ngrok.io/graphql',
+  uri: 'http://649ccc36.ngrok.io/graphql',
 });
 
 // Create WebSocket client
-const wsClient = new SubscriptionClient('ws://c67194cc.ngrok.io/subscriptions', {
+const wsClient = new SubscriptionClient('ws://649ccc36.ngrok.io/subscriptions', {
   reconnect: true,
   connectionParams: {}
 });

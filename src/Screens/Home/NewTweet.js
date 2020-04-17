@@ -44,6 +44,7 @@ class NewTweet extends React.Component {
                         text: this.state.text,
                         _id: Math.round(Math.random() * -1000000),
                         likesCount: 0,
+                        isFavorited: false,
                         createdAt: new Date(),
                         user: {
                             __typename: 'User',

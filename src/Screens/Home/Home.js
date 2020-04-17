@@ -11,41 +11,27 @@ import { ItemFeed } from '../../Components';
 import { GET_TWEETS_QUERY, ME_QUERY } from '../../Graphql/Quries';
 import { Colors, Images } from '../../CommonConfig';
 import { getSaveUserInfo } from '../../Redux/Actions';
-import { TWEET_ADDED_SUBSCRIPTION } from '../../Graphql/Subscriptions';
+import { TWEET_ADDED_SUBSCRIPTION, TWEET_FAVORITED_SUBSCRIPTION } from '../../Graphql/Subscriptions';
 
 class Home extends React.Component {
     // --------------- STATE ---------------
     state = {}
 
-    // UNSAFE_componentWillMount() {
-    //     // Calling subscription API here ...
-    //     this.props.data.subscribeToMore({
-    //         document: TWEET_ADDED_SUBSCRIPTION,
-    //         updateQuery: (prev, { subscriptionData }) => {
-    //             console.log('subscriptionData: ', subscriptionData);
-    //             if (!subscriptionData.data) {
-    //                 return prev;
-    //             }
-
-    //             const newTweet = subscriptionData.data.tweetAdded;
-
-    //             if (!prev.getTweets.find(tweet => tweet._id === newTweet._id)) {
-    //                 // return Object.assign({}, prev, {
-    //                 //     getTweets: [{ ...newTweet }, ...prev.getTweets]
-    //                 // })
-    //                 return {
-    //                     ...prev,
-    //                     getTweets: [{ ...newTweet }, ...prev.getTweets]
-    //                 };
-    //             }
-
-    //             return prev;
-    //         }
-    //     });
-    // }
-
     componentDidMount() {
-        // Calling subscription API here ...
+        // Calling subscription API for new tweet added here ...
+        this._tweetAddedSubscription();
+
+        // Calling subscription API when tweet liked from anyone here ...
+        this._tweetFavoritedSubscription();
+
+        this._getUserInfo();
+    }
+
+    // --------------- METHODS ---------------
+    _renderItem = ({ item }) => <ItemFeed {...item}/>
+    _renderPlaceholder = () => <ItemFeed placeholder isLoaded={!this.props.data.loading}/>
+
+    _tweetAddedSubscription() {
         this.props.data.subscribeToMore({
             document: TWEET_ADDED_SUBSCRIPTION,
             updateQuery: (prev, { subscriptionData }) => {
@@ -57,9 +43,6 @@ class Home extends React.Component {
                 const newTweet = subscriptionData.data.tweetAdded;
 
                 if (!prev.getTweets.find(tweet => tweet._id === newTweet._id)) {
-                    // return Object.assign({}, prev, {
-                    //     getTweets: [{ ...newTweet }, ...prev.getTweets]
-                    // })
                     return {
                         ...prev,
                         getTweets: [{ ...newTweet }, ...prev.getTweets]
@@ -69,14 +52,28 @@ class Home extends React.Component {
                 return prev;
             }
         });
-
-        this._getUserInfo();
     }
 
-    // --------------- METHODS ---------------
-    _renderItem = ({ item }) => <ItemFeed {...item}/>
+    _tweetFavoritedSubscription() {
+        this.props.data.subscribeToMore({
+            document: TWEET_FAVORITED_SUBSCRIPTION,
+            updateQuery: (prev, { subscriptionData }) => {
+                console.log('subscriptionData: ', subscriptionData);
+                if (!subscriptionData.data) {
+                    return prev;
+                }
+
+                const newTweet = subscriptionData.data.tweetFavorited;
+                return {
+                    ...prev,
+                    getTweets: prev.getTweets.map(tweet => tweet._id === newTweet._id ? { ...tweet, likesCount: newTweet.likesCount } : tweet),
+                };
+            }
+        });
+    }
 
     async _getUserInfo() {
+        // Calling get user info API here
         const { data } = await this.props.client.query({ query: ME_QUERY });
         console.log(data);
         this.props.getSaveUserInfo({ info: data.me });
@@ -90,8 +87,13 @@ class Home extends React.Component {
 
         if (data.loading) {
             return (
-                <View style={[home.root, { justifyContent: 'center', alignItems: 'center' }]}>
-                    <ActivityIndicator size='large' color={Colors.PRIMARY}/>
+                <View style={home.root}>
+                    <FlatList
+                        showsVerticalScrollIndicator={false}
+                        data={[1,2,3]}
+                        keyExtractor={item => item.toString()}
+                        renderItem={this._renderPlaceholder}
+                    />
                 </View>
             )
         }
